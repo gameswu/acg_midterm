@@ -1,0 +1,268 @@
+\documentclass[aspectratio=169,xcolor=dvipsnames]{beamer}
+\usetheme{SimplePlus}
+
+\usepackage{hyperref}
+\usepackage{graphicx} % Allows including images
+\usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+
+% 自定义脚注样式：小字号，编号与文本在同一行
+\setbeamerfont{footnote}{size=\tiny}
+\setbeamerfont{footnote mark}{size=\tiny}
+\setbeamertemplate{footnote}{%
+  \parindent 0em\noindent%
+  \raggedright
+  \hbox to 1.8em{\hfil\insertfootnotemark}\insertfootnotetext\par%
+}
+
+%----------------------------------------------------------------------------------------
+%    TITLE PAGE
+%----------------------------------------------------------------------------------------
+
+\title{Midterm Report of Image Rendering}
+\subtitle{2025 Fall ACG Course}
+
+\author{\texorpdfstring{Hengxu Wu\footnote{2024011308, wuhx24@mails.tsinghua.edu.cn}, Yangyi Xiong\footnote{2024011319, xiongyy24@mails.tsinghua.edu.cn}}{Hengxu Wu, Yangyi Xiong}} % Your name for the title page
+
+\institute
+{
+    Institute for Interdisciplinary Information Sciences \\
+    Tsinghua University % Your institution for the title page
+}
+\date{\today} % TODO: change to the date of presentation
+
+%----------------------------------------------------------------------------------------
+%    PRESENTATION SLIDES
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\begin{frame}
+    % Print the title page as the first slide
+    \titlepage
+\end{frame}
+
+\begin{frame}{Overview}
+    % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
+    \tableofcontents
+\end{frame}
+
+%------------------------------------------------
+\section{Introduction}
+\subsection{Overview}
+
+\begin{frame}{Introduction - Overview}
+    Our goal is to architect a high-performance rendering system purely on GPU (DirectX12). Unlike traditional approaches that rely on pre-existing frameworks, we are building the entire pipeline from scratch to ensure maximum control and optimization.
+\end{frame}
+
+\subsection{Technics}
+
+\begin{frame}{Introduction - Technics}
+    \begin{itemize}
+        \item Multiple Formats Support: OBJ, glTF, FBX, Blend
+        \item GPU-based Path Tracing: Acceleration Structures, Material Evaluation, Light Sampling
+        \item Denoising: Intel Open Image Denoise Integration\footnote{https://www.openimagedenoise.org/}
+        \item Other Special Effects: Depth of Field, Motion Blur
+    \end{itemize}
+\end{frame}
+
+%------------------------------------------------
+\section{Implementation}
+\subsection{Overall Architecture}
+
+\begin{frame}{Implementation - Overall Architecture}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\textwidth]{fig/arch.png}
+        \caption{System Architecture Diagram}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Implementation - Overall Architecture}
+    We have made great progress:
+    \begin{itemize}
+        \item Material: Basic diffuse/specular/transmissive materials, Principled BSDF and Multiple-layer materials
+        \item Texture: Support basic color texture
+        \item Scene: As shown in \hyperref[sec:results]{Results}, support various format, huge amount of resources online can be rendered
+        \item Antialiasing: Antialiasing supported by random jittering
+    \end{itemize}
+\end{frame}
+
+\subsection{Workflow}
+\begin{frame}{Implementation - Workflow}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\textwidth]{fig/arch_convert.png}
+            \caption{Conversion Part}
+        \end{figure}
+
+        \column{0.45\textwidth}
+        \textbf{Conversion}:
+
+        \begin{itemize}
+            \item Load models in various formats using our Python-based converter
+            \item Convert them into our custom binary format ACG file(\texttt{.acg})
+            \item Support complex materials such as those from Blender's Principled BSDF shader
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Implementation - Workflow}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\textwidth]{fig/arch_render.png}
+            \caption{Rendering Part}
+        \end{figure}
+
+        \column{0.45\textwidth}
+        \textbf{Rendering}:
+
+        \begin{itemize}
+            \item Load ACG files and create necessary GPU resources
+            \item Implement a GPU-based path tracing renderer using DirectX12
+            \item Complex material evaluation, light sampling algorithms, skybox lighting and more have been implemented
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Implementation - Workflow}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\textwidth]{fig/arch_process.png}
+            \caption{Processing Part}
+        \end{figure}
+
+        \column{0.45\textwidth}
+        \textbf{Processing}:
+
+        \begin{itemize}
+            \item Integrate Intel Open Image Denoise for high-quality denoising
+            \item Other special effects such as Depth of Field and Motion Blur are in development
+            \item Final image output and saving functionalities
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+\subsection{GUI}
+\begin{frame}{Implementation - GUI}
+    \begin{columns}[c]
+        \column{0.45\textwidth}
+        \begin{figure}
+            \centering
+            \includegraphics[width=\textwidth]{fig/gui.png}
+            \caption{GUI Screenshot}
+        \end{figure}
+
+        \column{0.45\textwidth}
+        \textbf{GUI}:
+
+        \begin{itemize}
+            \item Render Settings: Adjust output resolution, sampling parameters, lighting intensity, and scene model paths.
+            \item Camera Settings: Configure camera position, target, up vector, and field of view.
+            \item Render Results: Show the rendered image.
+            \item Controls: Start or stop rendering processes.
+            \item Log Details: View log messages and debug information.
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+%------------------------------------------------
+\section{Results}
+\label{sec:results}
+\subsection{Test Scene \& Denoising}
+\begin{frame}{Results - Test Scene \& Denoising}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/denoise.png}
+        \caption{Denoising Effect: Left - Denoising, Right - Without Denoising}
+    \end{figure}
+    Using Cornell Box as the test scene, with both 100 samples per pixel, denoised and non-denoised results are compared. Moreover, the cost time for denoising is faster than 1 second for a 1920x1080 image, which is efficient enough for practical use.
+\end{frame}
+
+\subsection{Advanced Materials}
+\begin{frame}{Results - Advanced Materials}
+    %\begin{figure}
+    %    \centering
+    %    \includegraphics[width=0.8\textwidth]{fig/materials.png} % TODO: replace with actual image file
+    %    \caption{Advanced Materials: Different complex materials cubes rendered in the scene}
+    %\end{figure}
+    Our renderer successfully supports complex materials, including glass, metal, and layered materials, demonstrating its capability to handle sophisticated material properties.
+\end{frame}
+
+\subsection{Large Scene}
+\begin{frame}{Results - Large Scene}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\textwidth]{fig/large_scene.png}
+        \caption{Large Scene Rendering: San-Miguel Model with 1.7 million triangles and 200+ textures has been successfully rendered}
+    \end{figure}
+    We use virtual textures to handle large scenes with high-resolution textures, enabling the rendering of complex environments without overwhelming GPU memory.
+\end{frame}
+
+\subsection{Skybox \& Other Formats}
+\begin{frame}{Results - Skybox \& Other Formats}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\textwidth]{fig/cirno.jpg}
+        \caption{Skybox Lighting: 3D-scan Cirno fumo scene with skybox lighting support}
+    \end{figure}
+    This scene demonstrates our renderer's capability to utilize skybox images for realistic environmental lighting. Additionally, we have successfully rendered models from various formats such as glTF and FBX, showcasing the versatility of our system.
+\end{frame}
+
+\subsection{Other Show Cases}
+\begin{frame}{Results - Other Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/demo2.png}
+        \caption{Scene: Breakfast Room}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Results - Other Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/demo3.png}
+        \caption{Scene: Cornell Box with Mirror}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Results - Other Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/demo4.png}
+        \caption{Scene: Sponza}
+    \end{figure}
+    
+\end{frame}
+%------------------------------------------------
+\section{Future Plan}
+\begin{frame}{Future Plan}
+    In the remaining time of the course, we plan to implement the following features:
+    \begin{table}
+        \begin{tabular}{l l}
+            \toprule
+            \textbf{Targets} & \textbf{Time} \\
+            \midrule
+            Support for Blender and FBX formats     & 1 week       \\
+            Volumetric Rendering & 1 - 2 week     \\
+            Special effects & 2 - 3 week \\
+            Final optimizations and testing & Remaining time \\
+            \bottomrule
+        \end{tabular}
+        \caption{Future Features and Their Status}
+    \end{table}
+\end{frame}
+%------------------------------------------------
+
+\begin{frame}
+    \Huge{\centerline{\textbf{Thanks for Listening!}}}
+\end{frame}
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
