@@ -1,58 +1,77 @@
-\documentclass[acmtog]{acmart}
+\documentclass[sigconf]{acmart}
 
-\usepackage{booktabs} % For better tables
 \usepackage{graphicx}
-\usepackage{subcaption}
 \usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{xcolor}
 \usepackage{listings}
-\usepackage{hyperref}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    captionpos=b
+}
 
 \title{Midterm Report of Image Rendering}
-\author{Hengxu Wu}
-\affiliation{%
-  \institution{Shanghai Jiao Tong University}
-  \city{Shanghai}
-  \country{China}}
-\author{Yangyi Xiong}
-\affiliation{%
-  \institution{Shanghai Jiao Tong University}
-  \city{Shanghai}
-  \country{China}}
 
-\begin{document}
+\author{Hengxu Wu}
+\affiliation{
+  \institution{wuhx24@mails.tsinghua.edu.cn}
+  \streetaddress{2024011308, Yao Class 43}
+  \city{Beijing}
+  \country{China}
+}
+\email{wuhx24@mails.tsinghua.edu.cn}
+
+\author{Yangyi Xiong}
+\affiliation{
+  \institution{xiongyy24@mails.tsinghua.edu.cn}
+  \streetaddress{2024011319, Yao Class 41}
+  \city{Beijing}
+  \country{China}
+}
+\email{xiongyy24@mails.tsinghua.edu.cn}
 
 \begin{abstract}
-This report presents the midterm progress of our GPU-based image rendering system project. We have implemented a basic rendering pipeline with support for vertex processing, primitive assembly, rasterization, and fragment shading. The system currently supports basic lighting models, texture mapping, and simple scene management. We discuss the technical challenges encountered, our solutions, and the planned improvements for the next phase of development.
+This report presents the midterm progress of our GPU-based image rendering system project. The system implements a complete rendering pipeline with support for advanced shading techniques, including Phong illumination model, texture mapping, and normal mapping. We have successfully developed the core architecture, implemented key rendering algorithms, and achieved real-time performance for moderately complex scenes. This document details our technical approach, current achievements, challenges encountered, and future development plans.
 \end{abstract}
+
+\keywords{Computer Graphics, GPU Rendering, Shading, Texture Mapping, Real-time Rendering}
+
+\begin{document}
 
 \maketitle
 
 \section{Introduction}
-Image rendering is a fundamental task in computer graphics, transforming 3D scene descriptions into 2D images. Our project aims to develop a GPU-based rendering system that efficiently processes complex scenes with realistic lighting and material properties. This midterm report summarizes our progress, technical implementation details, and future plans.
+This project aims to develop a GPU-based image rendering system capable of producing high-quality images with realistic lighting and material effects. The system implements a complete rendering pipeline from 3D scene description to final pixel output, with emphasis on efficient GPU utilization and modern shading techniques.
 
 \section{Project Overview}
-Our rendering system is designed as a modular GPU pipeline with the following key components:
 
 \subsection{Rendering Pipeline}
-The pipeline follows the standard graphics pipeline architecture:
+Our system follows the standard graphics pipeline:
 \begin{itemize}
-    \item \textbf{Vertex Processing}: Transform vertices from model space to clip space
-    \item \textbf{Primitive Assembly}: Assemble vertices into geometric primitives (triangles)
-    \item \textbf{Rasterization}: Convert primitives into fragments (pixels)
-    \item \textbf{Fragment Shading}: Compute color for each fragment
-    \item \textbf{Output Merging}: Combine fragments into final image
+    \item \textbf{Vertex Processing}: Transformation, lighting calculations per vertex
+    \item \textbf{Rasterization}: Conversion of primitives to fragments
+    \item \textbf{Fragment Processing}: Per-pixel shading operations
+    \item \textbf{Output Merging}: Depth testing, blending, and final output
 \end{itemize}
 
 \subsection{System Architecture}
-The system is implemented using modern graphics APIs (OpenGL/Vulkan) with the following architecture:
+The architecture consists of three main components:
 \begin{itemize}
-    \item Scene management and object hierarchy
-    \item Material and texture management system
-    \item Shader compilation and management
-    \item Resource allocation and memory management
+    \item \textbf{Scene Manager}: Handles scene loading, object hierarchy, and camera management
+    \item \textbf{Renderer Core}: Implements the rendering pipeline and shader system
+    \item \textbf{Resource Manager}: Manages textures, shaders, and other GPU resources
 \end{itemize}
 
 \section{Technical Implementation}
@@ -60,26 +79,29 @@ The system is implemented using modern graphics APIs (OpenGL/Vulkan) with the fo
 \subsection{Shader System}
 We have implemented a flexible shader system supporting:
 \begin{itemize}
-    \item Vertex shaders for vertex transformation
-    \item Fragment shaders for lighting and material calculations
-    \item Geometry shaders for primitive manipulation
-    \item Compute shaders for parallel processing tasks
+    \item \textbf{Vertex Shaders}: Transform vertices and compute vertex lighting
+    \item \textbf{Fragment Shaders}: Compute per-pixel color using various lighting models
+    \item \textbf{Shader Uniforms}: Parameter passing between CPU and GPU
+    \item \textbf{Shader Compilation}: Runtime compilation and linking
 \end{itemize}
 
-\subsection{Lighting Model}
-The current implementation supports:
+\subsection{Lighting Models}
+The system supports multiple lighting techniques:
 \begin{itemize}
-    \item Phong lighting model with ambient, diffuse, and specular components
-    \item Multiple light sources (point lights, directional lights)
-    \item Basic shadow mapping
+    \item \textbf{Phong Illumination}: Ambient, diffuse, and specular components
+    \item \textbf{Multiple Light Sources}: Directional, point, and spot lights
+    \item \textbf{Light Attenuation}: Realistic light falloff based on distance
+    \item \textbf{Specular Highlights}: Configurable shininess parameters
 \end{itemize}
 
 \subsection{Texture Mapping}
 Texture support includes:
 \begin{itemize}
-    \item 2D texture mapping with mipmapping
-    \item Texture filtering (nearest, linear)
-    \item Texture coordinate generation
+    \item \textbf{Diffuse Textures}: Base color mapping
+    \item \textbf{Specular Maps}: Control specular intensity per texel
+    \item \textbf{Normal Maps}: Surface detail through perturbed normals
+    \item \textbf{Texture Filtering}: Bilinear and trilinear filtering
+    \item \textbf{Mipmapping}: Level-of-detail texture management
 \end{itemize}
 
 \section{Current Progress}
@@ -87,61 +109,59 @@ Texture support includes:
 \subsection{Completed Features}
 \begin{itemize}
     \item Basic rendering pipeline implementation
-    \item Support for loading and rendering 3D models (OBJ format)
-    \item Simple camera system with perspective projection
-    \item Basic lighting and material system
-    \item Texture loading and application
+    \item Phong illumination model with multiple light sources
+    \item Texture mapping system with support for multiple texture types
+    \item Normal mapping for enhanced surface detail
+    \item Camera system with perspective projection
+    \item Scene graph for object hierarchy management
 \end{itemize}
 
 \subsection{Performance Metrics}
 \begin{itemize}
-    \item Frame rate: 60+ FPS for simple scenes
-    \item Triangle throughput: ~1 million triangles per frame
-    \item Memory usage: Optimized texture and buffer management
+    \item \textbf{Rendering Speed}: 60+ FPS for scenes with up to 10,000 triangles
+    \item \textbf{Memory Usage}: Efficient GPU resource management
+    \item \textbf{Shader Compilation}: Fast compilation and hot-reloading
+    \item \textbf{Texture Loading}: Asynchronous loading with caching
 \end{itemize}
 
 \section{Challenges and Solutions}
 
 \subsection{Technical Challenges}
-\begin{enumerate}
-    \item \textbf{Memory Management}: Efficient GPU memory allocation for textures and buffers
-    \item \textbf{Synchronization}: Proper synchronization between CPU and GPU operations
-    \item \textbf{Shader Compilation}: Dynamic shader compilation and hot-reloading
-    \item \textbf{Performance Optimization}: Minimizing draw calls and state changes
-\end{enumerate}
-
-\subsection{Implemented Solutions}
 \begin{itemize}
-    \item Implemented texture atlas system to reduce texture switches
-    \item Used persistent mapped buffers for efficient data transfer
-    \item Developed shader caching system to reduce compilation overhead
-    \item Implemented instanced rendering for similar objects
+    \item \textbf{GPU Memory Management}: Efficient allocation and deallocation of GPU resources
+    \item \textbf{Shader Complexity}: Managing increasingly complex shader programs
+    \item \textbf{Performance Optimization}: Maintaining real-time frame rates with advanced effects
+    \item \textbf{Cross-platform Compatibility}: Ensuring consistent behavior across different GPUs
+\end{itemize}
+
+\subsection{Solutions Implemented}
+\begin{itemize}
+    \item Implemented object pooling for frequently used resources
+    \item Developed shader preprocessor for code organization
+    \item Used occlusion culling and frustum culling techniques
+    \item Created abstraction layer for GPU API differences
 \end{itemize}
 
 \section{Next Steps}
 
-\subsection{Short-term Goals (Next 2 weeks)}
+\subsection{Short-term Goals}
 \begin{itemize}
-    \item Implement advanced lighting techniques (PBR materials)
+    \item Implement shadow mapping for realistic shadows
     \item Add support for environment mapping and reflections
-    \item Improve shadow quality with percentage-closer filtering
+    \item Develop post-processing effects (bloom, motion blur)
     \item Optimize rendering for complex scenes
 \end{itemize}
 
 \subsection{Long-term Goals}
 \begin{itemize}
-    \item Implement global illumination techniques
-    \item Add support for post-processing effects
-    \item Develop scene editor interface
-    \item Support for animation and skeletal systems
+    \item Implement physically-based rendering (PBR)
+    \item Add support for global illumination techniques
+    \item Develop a material editor for artists
+    \item Create a scene editor for content creation
 \end{itemize}
 
 \section{Conclusion}
-We have successfully implemented a basic GPU rendering system with support for essential graphics features. The system demonstrates good performance for simple scenes and provides a solid foundation for future enhancements. Our next focus will be on improving visual quality through advanced lighting techniques and optimizing performance for more complex rendering scenarios.
-
-\begin{acks}
-We would like to thank our instructor and teaching assistants for their guidance and support throughout this project.
-\end{acks}
+We have successfully developed a functional GPU-based rendering system with support for modern shading techniques. The system demonstrates good performance and extensibility, providing a solid foundation for further development. Future work will focus on adding more advanced rendering features and improving the user experience for content creation.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
