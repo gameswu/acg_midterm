@@ -2,6 +2,8 @@
 
 \usepackage{graphicx}
 \usepackage{amsmath}
+% 避免 \Bbbk 重复定义冲突
+\let\Bbbk\relax
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{algorithm}
@@ -26,8 +28,7 @@
 
 \author{Hengxu Wu}
 \affiliation{
-  \institution{wuhx24@mails.tsinghua.edu.cn}
-  \streetaddress{2024011308, Yao Class 43}
+  \institution{2024011308, Yao Class 43}
   \city{Beijing}
   \country{China}
 }
@@ -35,8 +36,7 @@
 
 \author{Yangyi Xiong}
 \affiliation{
-  \institution{xiongyy24@mails.tsinghua.edu.cn}
-  \streetaddress{2024011319, Yao Class 41}
+  \institution{2024011319, Yao Class 41}
   \city{Beijing}
   \country{China}
 }
@@ -53,111 +53,146 @@ This report presents the midterm progress of our GPU-based image rendering syste
 \maketitle
 
 \section{Introduction}
-This project aims to develop a GPU-based image rendering system capable of producing high-quality images with realistic lighting and material effects. The system implements a complete rendering pipeline from 3D scene description to final pixel output, with emphasis on efficient GPU utilization and modern shading techniques.
+This project aims to architect a high-performance rendering system purely on GPU using DirectX12. Unlike traditional approaches that rely on pre-existing frameworks, we are building the entire pipeline from scratch to ensure maximum control and optimization.
 
-\section{Project Overview}
+Our system supports multiple model formats including OBJ, glTF, FBX, and Blend. It features a GPU-based path tracing renderer that implements acceleration structures, material evaluation, and light sampling. For image quality improvement, we have integrated Intel Open Image Denoise~\cite{OpenImageDenoise} and are developing special effects such as Depth of Field and Motion Blur.
 
-\subsection{Rendering Pipeline}
-Our system follows the standard graphics pipeline:
+\section{Implementation}
+
+\subsection{Overall Architecture}
+The system architecture is designed to be modular and efficient. As shown in Figure~\ref{fig:arch}, the pipeline is divided into three main stages: Conversion, Rendering, and Processing.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/arch.png}
+    \caption{System Architecture Diagram}
+    \label{fig:arch}
+\end{figure}
+
+We have made significant progress in implementing various features. The material system supports basic diffuse, specular, and transmissive materials, as well as Principled BSDF and multiple-layer materials. The texture system currently supports basic color textures. The scene management system can handle various formats and render a huge amount of resources available online, as demonstrated in the Results section. Additionally, antialiasing is supported through random jittering.
+
+\subsection{Workflow}
+
+\subsubsection{Conversion}
+The conversion stage involves loading models in various formats using our Python-based converter. These models are then converted into our custom binary format, the ACG file (\texttt{.acg}). This process ensures that complex materials, such as those from Blender's Principled BSDF shader, are correctly preserved and optimized for our renderer.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/arch_convert.png}
+    \caption{Conversion Workflow}
+    \label{fig:convert}
+\end{figure}
+
+\subsubsection{Rendering}
+In the rendering stage, the system loads the ACG files and creates the necessary GPU resources. We have implemented a GPU-based path tracing renderer using DirectX12. This renderer handles complex material evaluation, light sampling algorithms, and skybox lighting.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/arch_render.png}
+    \caption{Rendering Workflow}
+    \label{fig:render}
+\end{figure}
+
+\subsubsection{Processing}
+The processing stage focuses on enhancing the final image quality. We have integrated Intel Open Image Denoise to provide high-quality denoising. Other special effects, such as Depth of Field and Motion Blur, are currently in development. The final image output and saving functionalities are also handled in this stage.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/arch_process.png}
+    \caption{Processing Workflow}
+    \label{fig:process}
+\end{figure}
+
+\subsection{GUI}
+To facilitate user interaction, we have developed a Graphical User Interface (GUI) as shown in Figure~\ref{fig:gui}. The GUI allows users to adjust render settings such as output resolution, sampling parameters, lighting intensity, and scene model paths. Camera settings, including position, target, up vector, and field of view, can also be configured. The GUI displays the rendered image in real-time and provides controls to start or stop the rendering process. Log details are also available for debugging purposes.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/gui.png}
+    \caption{GUI Screenshot}
+    \label{fig:gui}
+\end{figure}
+
+\section{Results}
+
+\subsection{Test Scene \& Denoising}
+We used the Cornell Box as a test scene to evaluate our denoising implementation. Figure~\ref{fig:denoise} compares the results with and without denoising, both using 100 samples per pixel. The denoising process is highly efficient, taking less than 1 second for a 1920x1080 image, making it suitable for practical use.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/denoise.png}
+    \caption{Denoising Effect: Left - Denoised, Right - Noisy}
+    \label{fig:denoise}
+\end{figure}
+
+\subsection{Advanced Materials}
+Our renderer successfully supports complex materials, including glass, metal, and layered materials. Figure~\ref{fig:cubes} shows different complex material cubes rendered in the scene, demonstrating the system's capability to handle sophisticated material properties. Additionally, Figure~\ref{fig:cubes2} illustrates the accurate rendering of Blender's Principled BSDF material.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../slide/fig/cubes.png}
+    \caption{Advanced Materials: Complex material cubes}
+    \label{fig:cubes}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/cubes2.png}
+    \caption{Advanced Materials: Blender's Principled BSDF}
+    \label{fig:cubes2}
+\end{figure}
+
+\subsection{Large Scene}
+We have also tested the renderer with large scenes. Figure~\ref{fig:large_scene} shows the San-Miguel model, which contains 1.7 million triangles and over 200 textures. By using virtual textures, we can handle large scenes with high-resolution textures without overwhelming GPU memory.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../slide/fig/large_scene.png}
+    \caption{Large Scene Rendering: San-Miguel Model}
+    \label{fig:large_scene}
+\end{figure}
+
+\subsection{Skybox \& Other Formats}
+Figure~\ref{fig:cirno} demonstrates our renderer's capability to utilize skybox images for realistic environmental lighting. The scene features a 3D-scan Cirno fumo model. We have also successfully rendered models from various formats such as glTF and FBX, showcasing the versatility of our system.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../slide/fig/cirno.jpg}
+    \caption{Skybox Lighting: 3D-scan Cirno fumo scene}
+    \label{fig:cirno}
+\end{figure}
+
+\subsection{Other Show Cases}
+We present additional rendering results to demonstrate the versatility of our system. Figure~\ref{fig:demo2} shows a rendered Breakfast Room scene. Figure~\ref{fig:demo3} displays the Cornell Box with a mirror, highlighting reflection capabilities. Figure~\ref{fig:demo4} presents the Sponza scene, a classic test model for global illumination.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/demo2.png}
+    \caption{Scene: Breakfast Room}
+    \label{fig:demo2}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/demo3.png}
+    \caption{Scene: Cornell Box with Mirror}
+    \label{fig:demo3}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../slide/fig/demo4.png}
+    \caption{Scene: Sponza}
+    \label{fig:demo4}
+\end{figure}
+
+\section{Future Plan}
+In the remaining time of the course, we plan to implement the following features:
 \begin{itemize}
-    \item \textbf{Vertex Processing}: Transformation, lighting calculations per vertex
-    \item \textbf{Rasterization}: Conversion of primitives to fragments
-    \item \textbf{Fragment Processing}: Per-pixel shading operations
-    \item \textbf{Output Merging}: Depth testing, blending, and final output
-\end{itemize}
-
-\subsection{System Architecture}
-The architecture consists of three main components:
-\begin{itemize}
-    \item \textbf{Scene Manager}: Handles scene loading, object hierarchy, and camera management
-    \item \textbf{Renderer Core}: Implements the rendering pipeline and shader system
-    \item \textbf{Resource Manager}: Manages textures, shaders, and other GPU resources
-\end{itemize}
-
-\section{Technical Implementation}
-
-\subsection{Shader System}
-We have implemented a flexible shader system supporting:
-\begin{itemize}
-    \item \textbf{Vertex Shaders}: Transform vertices and compute vertex lighting
-    \item \textbf{Fragment Shaders}: Compute per-pixel color using various lighting models
-    \item \textbf{Shader Uniforms}: Parameter passing between CPU and GPU
-    \item \textbf{Shader Compilation}: Runtime compilation and linking
-\end{itemize}
-
-\subsection{Lighting Models}
-The system supports multiple lighting techniques:
-\begin{itemize}
-    \item \textbf{Phong Illumination}: Ambient, diffuse, and specular components
-    \item \textbf{Multiple Light Sources}: Directional, point, and spot lights
-    \item \textbf{Light Attenuation}: Realistic light falloff based on distance
-    \item \textbf{Specular Highlights}: Configurable shininess parameters
-\end{itemize}
-
-\subsection{Texture Mapping}
-Texture support includes:
-\begin{itemize}
-    \item \textbf{Diffuse Textures}: Base color mapping
-    \item \textbf{Specular Maps}: Control specular intensity per texel
-    \item \textbf{Normal Maps}: Surface detail through perturbed normals
-    \item \textbf{Texture Filtering}: Bilinear and trilinear filtering
-    \item \textbf{Mipmapping}: Level-of-detail texture management
-\end{itemize}
-
-\section{Current Progress}
-
-\subsection{Completed Features}
-\begin{itemize}
-    \item Basic rendering pipeline implementation
-    \item Phong illumination model with multiple light sources
-    \item Texture mapping system with support for multiple texture types
-    \item Normal mapping for enhanced surface detail
-    \item Camera system with perspective projection
-    \item Scene graph for object hierarchy management
-\end{itemize}
-
-\subsection{Performance Metrics}
-\begin{itemize}
-    \item \textbf{Rendering Speed}: 60+ FPS for scenes with up to 10,000 triangles
-    \item \textbf{Memory Usage}: Efficient GPU resource management
-    \item \textbf{Shader Compilation}: Fast compilation and hot-reloading
-    \item \textbf{Texture Loading}: Asynchronous loading with caching
-\end{itemize}
-
-\section{Challenges and Solutions}
-
-\subsection{Technical Challenges}
-\begin{itemize}
-    \item \textbf{GPU Memory Management}: Efficient allocation and deallocation of GPU resources
-    \item \textbf{Shader Complexity}: Managing increasingly complex shader programs
-    \item \textbf{Performance Optimization}: Maintaining real-time frame rates with advanced effects
-    \item \textbf{Cross-platform Compatibility}: Ensuring consistent behavior across different GPUs
-\end{itemize}
-
-\subsection{Solutions Implemented}
-\begin{itemize}
-    \item Implemented object pooling for frequently used resources
-    \item Developed shader preprocessor for code organization
-    \item Used occlusion culling and frustum culling techniques
-    \item Created abstraction layer for GPU API differences
-\end{itemize}
-
-\section{Next Steps}
-
-\subsection{Short-term Goals}
-\begin{itemize}
-    \item Implement shadow mapping for realistic shadows
-    \item Add support for environment mapping and reflections
-    \item Develop post-processing effects (bloom, motion blur)
-    \item Optimize rendering for complex scenes
-\end{itemize}
-
-\subsection{Long-term Goals}
-\begin{itemize}
-    \item Implement physically-based rendering (PBR)
-    \item Add support for global illumination techniques
-    \item Develop a material editor for artists
-    \item Create a scene editor for content creation
+    \item \textbf{Support for Blender and FBX formats}: Expected to be completed within 1 week.
+    \item \textbf{Volumetric Rendering}: Planned for the next 1-2 weeks.
+    \item \textbf{Special effects}: Such as Depth of Field and Motion Blur, planned for 2-3 weeks.
+    \item \textbf{Final optimizations and testing}: Will be conducted in the remaining time.
 \end{itemize}
 
 \section{Conclusion}
