@@ -18,7 +18,7 @@
 %    TITLE PAGE
 %----------------------------------------------------------------------------------------
 
-\title{Midterm Report of Image Rendering}
+\title{Final Report of Image Rendering}
 \subtitle{2025 Fall ACG Course}
 
 \author{\texorpdfstring{Hengxu Wu\footnote{2024011308, wuhx24@mails.tsinghua.edu.cn}, Yangyi Xiong\footnote{2024011319, xiongyy24@mails.tsinghua.edu.cn}}{Hengxu Wu, Yangyi Xiong}} % Your name for the title page
@@ -61,7 +61,7 @@
         \item Multiple Formats Support: OBJ, glTF, FBX, Blend
         \item GPU-based Path Tracing: Acceleration Structures, Material Evaluation, Light Sampling
         \item Denoising: Intel Open Image Denoise Integration\footnote{https://www.openimagedenoise.org/}
-        \item Other Special Effects: Depth of Field, Motion Blur
+        \item Other Special Effects: Depth of Field, Chromatic Dispersion
     \end{itemize}
 \end{frame}
 
@@ -72,7 +72,7 @@
 \begin{frame}{Implementation - Overall Architecture}
     \begin{figure}
         \centering
-        \includegraphics[width=0.7\textwidth]{fig/arch.png}
+        \includegraphics[width=0.7\textwidth]{fig/archi.png}
         \caption{System Architecture Diagram}
     \end{figure}
 \end{frame}
@@ -93,7 +93,7 @@
         \column{0.45\textwidth}
         \begin{figure}
             \centering
-            \includegraphics[width=\textwidth]{fig/arch_convert.png}
+            \includegraphics[width=\textwidth]{fig/archi_preprocess.png}
             \caption{Conversion Part}
         \end{figure}
 
@@ -113,7 +113,7 @@
         \column{0.45\textwidth}
         \begin{figure}
             \centering
-            \includegraphics[width=\textwidth]{fig/arch_render.png}
+            \includegraphics[width=\textwidth]{fig/archi_render.png}
             \caption{Rendering Part}
         \end{figure}
 
@@ -133,7 +133,7 @@
         \column{0.45\textwidth}
         \begin{figure}
             \centering
-            \includegraphics[width=\textwidth]{fig/arch_process.png}
+            \includegraphics[width=\textwidth]{fig/archi_process.png}
             \caption{Processing Part}
         \end{figure}
 
@@ -163,7 +163,7 @@
 
         \begin{itemize}
             \item Render Settings: Adjust output resolution, sampling parameters, lighting intensity, and scene model paths.
-            \item Camera Settings: Configure camera position, target, up vector, and field of view.
+            \item Camera Settings: Configure camera position, target, up vector, field of view, depth of field and motion blur.
             \item Render Results: Show the rendered image.
             \item Controls: Start or stop rendering processes.
             \item Log Details: View log messages and debug information.
@@ -222,6 +222,86 @@
     This scene demonstrates our renderer's capability to utilize skybox images for realistic environmental lighting. Additionally, we have successfully rendered models from various formats such as glTF and FBX, showcasing the versatility of our system.
 \end{frame}
 
+\subsection{Depth of Field}
+\begin{frame}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\textwidth]{fig/depth-of-field.jpg}
+        \caption{Depth of Field Effect: Focus on the center sphere, with foreground and background blurred}
+    \end{figure}
+    We have implemented Depth of Field effect to enhance realism in our renders. The effect is achieved by simulating a camera lens, where objects at different distances from the focal point appear blurred. In
+    this figure, the sharpest distance is the block in the mirror.
+\end{frame}
+
+\subsection{Chromatic Dispersion}
+\begin{frame}{Results - Chromatic Dispersion}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig/chroma.jpg}
+        \caption{Chromatic Dispersion Effect: Light splitting into different colors when passing through a prism-like object}
+    \end{figure}
+    We have implemented Chromatic Dispersion effect to simulate the phenomenon where light splits into different colors when passing through materials like glass or water.
+\end{frame}
+\begin{frame}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.75\textwidth]{fig/chroma-2.png}
+        \caption{Chromatic Dispersion Effect: Color fringing on the edges of the sphere}
+    \end{figure}
+    \begin{figure}
+        \includegraphics[width=0.2\textwidth]{fig/chroma-1.png}
+        \caption{Chromatic Dispersion Effect: Color fringing on the bottom of water}
+    \end{figure}
+\end{frame}
+
+\subsection{Rendering with Relativity effect}
+\begin{frame}{Results - Relativity Effect}
+    We have implemented a basic version of relativistic rendering, which simulates the visual effects of objects moving at speeds close to the speed of light. This includes phenomena such as length contraction and Doppler shifting of colors. In this figure, the cubes appear distorted due to their high velocity relative to the observer.
+\end{frame}
+\begin{frame}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig/0.png}
+        \caption{Relativity Effect: Camera moving at 0.0c (stationary)}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig/1.png}
+        \caption{Relativity Effect: Camera moving at 0.1c}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig/2.png}
+        \caption{Relativity Effect: Camera moving at 0.2c}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig/3.png}
+        \caption{Relativity Effect: Camera moving at 0.3c}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig/4.png}
+        \caption{Relativity Effect: Camera moving at 0.4c}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig/9.png}
+        \caption{Relativity Effect: Camera moving at 0.9c}
+    \end{figure}
+\end{frame}
+
+
 \subsection{Other Show Cases}
 \begin{frame}{Results - Other Show Cases}
     \begin{figure}
@@ -248,23 +328,23 @@
     
 \end{frame}
 %------------------------------------------------
-\section{Future Plan}
-\begin{frame}{Future Plan}
-    In the remaining time of the course, we plan to implement the following features:
-    \begin{table}
-        \begin{tabular}{l l}
-            \toprule
-            \textbf{Targets} & \textbf{Time} \\
-            \midrule
-            Support for Blender and FBX formats     & 1 week       \\
-            Volumetric Rendering & 1 - 2 week     \\
-            Special effects & 2 - 3 week \\
-            Final optimizations and testing & Remaining time \\
-            \bottomrule
-        \end{tabular}
-        \caption{Future Features and Their Status}
-    \end{table}
-\end{frame}
+% \section{Future Plan}
+% \begin{frame}{Future Plan}
+%     In the remaining time of the course, we plan to implement the following features:
+%     \begin{table}
+%         \begin{tabular}{l l}
+%             \toprule
+%             \textbf{Targets} & \textbf{Time} \\
+%             \midrule
+%             Support for Blender and FBX formats     & 1 week       \\
+%             Volumetric Rendering & 1 - 2 week     \\
+%             Special effects & 2 - 3 week \\
+%             Final optimizations and testing & Remaining time \\
+%             \bottomrule
+%         \end{tabular}
+%         \caption{Future Features and Their Status}
+%     \end{table}
+% \end{frame}
 %------------------------------------------------
 
 \begin{frame}
