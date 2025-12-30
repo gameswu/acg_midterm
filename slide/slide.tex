@@ -4,6 +4,10 @@
 \usepackage{hyperref}
 \usepackage{graphicx} % Allows including images
 \usepackage{booktabs} % Allows the use of \toprule, \midrule and \bottomrule in tables
+\usepackage{listings}
+\usepackage{multicol}
+\usepackage{animate}
+\lstset{basicstyle=\tiny\ttfamily,breaklines=true,frame=single,language=C++}
 
 % 自定义脚注样式：小字号，编号与文本在同一行
 \setbeamerfont{footnote}{size=\tiny}
@@ -43,7 +47,9 @@
 
 \begin{frame}{Overview}
     % Throughout your presentation, if you choose to use \section{} and \subsection{} commands, these will automatically be printed on this slide as an overview of your presentation
-    \tableofcontents
+    \begin{multicols}{2}
+        \tableofcontents
+    \end{multicols}
 \end{frame}
 
 %------------------------------------------------
@@ -51,7 +57,7 @@
 \subsection{Overview}
 
 \begin{frame}{Introduction - Overview}
-    Our goal is to architect a high-performance rendering system purely on GPU (DirectX12). Unlike traditional approaches that rely on pre-existing frameworks, we are building the entire pipeline from scratch to ensure maximum control and optimization.
+    We have implemented a high-performance ray tracing rendering system purely on GPU (DirectX12) from scratch. Unlike traditional approaches that rely on pre-existing frameworks, building the entire pipeline ourselves ensures maximum control and optimization. Additionally, our renderer supports a variety of special effects.
 \end{frame}
 
 \subsection{Technics}
@@ -59,9 +65,9 @@
 \begin{frame}{Introduction - Technics}
     \begin{itemize}
         \item Multiple Formats Support: OBJ, glTF, FBX, Blend
-        \item GPU-based Path Tracing: Acceleration Structures, Material Evaluation, Light Sampling
+        \item GPU-based Path Tracing: Acceleration Structures, Material Evaluation, Light Sampling, Virtual Textures
         \item Denoising: Intel Open Image Denoise Integration\footnote{https://www.openimagedenoise.org/}
-        \item Other Special Effects: Depth of Field, Chromatic Dispersion
+        \item Other Special Effects: Depth of Field, Chromatic Dispersion, Relativity Effect
     \end{itemize}
 \end{frame}
 
@@ -75,16 +81,6 @@
         \includegraphics[width=0.7\textwidth]{fig/archi.png}
         \caption{System Architecture Diagram}
     \end{figure}
-\end{frame}
-
-\begin{frame}{Implementation - Overall Architecture}
-    We have made great progress:
-    \begin{itemize}
-        \item Material: Basic diffuse/specular/transmissive materials, Principled BSDF and Multiple-layer materials
-        \item Texture: Support basic color texture
-        \item Scene: As shown in \hyperref[sec:results]{Results}, support various format, huge amount of resources online can be rendered
-        \item Antialiasing: Antialiasing supported by random jittering
-    \end{itemize}
 \end{frame}
 
 \subsection{Workflow}
@@ -142,7 +138,7 @@
 
         \begin{itemize}
             \item Integrate Intel Open Image Denoise for high-quality denoising
-            \item Other special effects such as Depth of Field and Motion Blur are in development
+            \item Other special effects such as Depth of Field and Motion Blur
             \item Final image output and saving functionalities
         \end{itemize}
     \end{columns}
@@ -172,10 +168,227 @@
 \end{frame}
 
 %------------------------------------------------
+\section{Features}
+
+\subsection{Cartoonization}
+\begin{frame}{Cartoonization - Overview}
+    \textbf{Optimized Color Quantization:}
+    \begin{itemize}
+        \item Increased default levels from 8 to 12 for smoother transitions.
+        \item Adjustable range: 4-32 levels.
+    \end{itemize}
+    
+    \textbf{Smart Edge Detection:}
+    \begin{itemize}
+        \item \textbf{Performance:} Uses grayscale gradient (1 calculation vs 3 RGB).
+        \item \textbf{Coverage:} Extended to full image including edge pixels.
+        \item \textbf{Threshold:} Increased default to 150 to reduce noise.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Cartoonization - Overview}
+    \textbf{Highlight Preservation System:}
+    \begin{itemize}
+        \item Reduces edge darkening by 70\% for pixels with brightness $> 200$.
+        \item Prevents highlights from being overly darkened.
+    \end{itemize}
+    
+    \textbf{Adjustable Parameters (GUI):}
+    \begin{itemize}
+        \item \textbf{Color Levels (4-32):} Lower = more cartoon-like.
+        \item \textbf{Edge Threshold (50-500):} Lower = more edges detected.
+        \item \textbf{Edge Darkness (0.1-1.0):} Lower = darker outlines.
+        \item \textbf{Highlight Preserve (150-255):} Higher = more highlights protected.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Cartoonization - Show Case}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/cartoon.png}
+        \caption{Cartoonization Effect: Cartoon style rendering with optimized color quantization and edge detection}
+    \end{figure}
+\end{frame}
+
+\subsection{Relativistic Rendering}
+\begin{frame}{Relativistic Rendering - Theoretical Background}
+    \textbf{Three Visual Effects:}
+    \begin{itemize}
+        \item \textbf{Aberration}: Light direction changes, field of view shrinks forward.
+        \item \textbf{Doppler Shift}: Color frequency changes (Blue shift/Red shift).
+        \item \textbf{Headlight Effect}: Brightness increases forward, dims backward.
+    \end{itemize}
+    \textbf{Lorentz Transformation:}
+    $$ \beta = v/c, \quad \gamma = \frac{1}{\sqrt{1 - \beta^2}} $$
+    $$ \Delta t' = \gamma \Delta t, \quad L' = L/\gamma $$
+    Significant effects appear when $\beta \to 1$.
+\end{frame}
+
+\begin{frame}{Relativistic Rendering - Aberration}
+    \textbf{Theory:} $\cos(\theta') = \frac{\cos(\theta) - \beta}{1 - \beta \cos(\theta)}$ (Inverse transform for ray tracing)
+    
+    \textbf{Implementation:}
+    \begin{itemize}
+        \item Calculate the angle $\theta'$ between the view direction and velocity.
+        \item Apply the inverse aberration formula to find the original angle $\theta$.
+        \item Construct the new ray direction using the computed $\theta$.
+    \end{itemize}
+    
+    \textbf{Pseudocode:}
+    \begin{itemize}
+        \item $v_{hat} \leftarrow velocity / \beta$
+        \item $\cos\theta' \leftarrow dot(dir, v_{hat})$
+        \item $\cos\theta \leftarrow (\cos\theta' - \beta) / (1 - \beta \cdot \cos\theta')$
+        \item $newDir \leftarrow reconstruct(v_{hat}, \cos\theta)$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Relativistic Rendering - Doppler Effect}
+    \textbf{Theory:} $D = \gamma(1 + \beta \cos(\theta))$, $f' = D \cdot f$
+    
+    \textbf{Factor Calculation:}
+    \begin{itemize}
+        \item Determine the angle between light direction and velocity.
+        \item Compute the Doppler factor $D$ using the Lorentz factor $\gamma$.
+    \end{itemize}
+    
+    \textbf{Pseudocode:}
+    \begin{itemize}
+        \item $lightDir \leftarrow -rayDir$
+        \item $\cos\theta \leftarrow dot(lightDir, v_{hat})$
+        \item $D \leftarrow \gamma \cdot (1 + \beta \cdot \cos\theta)$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Relativistic Rendering - Color Shift}
+    \textbf{Applying Doppler Shift:}
+    \begin{itemize}
+        \item Shift RGB wavelengths: $\lambda' = \lambda / D$.
+        \item Apply intensity falloff for wavelengths moving out of the visible spectrum.
+        \item Convert shifted wavelengths back to RGB colors.
+    \end{itemize}
+    
+    \textbf{Pseudocode:}
+    \begin{itemize}
+        \item $wavelengths \leftarrow \{650, 550, 450\}$ (RGB)
+        \item $shiftedWavelengths \leftarrow wavelengths / D$
+        \item $falloff \leftarrow calculateVisibleFalloff(shiftedWavelengths)$
+        \item $resultColor \leftarrow wavelengthToRGB(shiftedWavelengths) \cdot originalColor \cdot falloff$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Relativistic Rendering - Headlight Effect}
+    \textbf{Theory:} $I' = I \times D^n$ (We use $n=2$ for balance).
+    
+    \textbf{Implementation:}
+    \begin{itemize}
+        \item Calculate Doppler factor $D$ for the view direction.
+        \item Scale the environment light intensity by $D^2$.
+        \item Clamp the factor to avoid extreme brightness.
+    \end{itemize}
+    
+    \textbf{Pseudocode:}
+    \begin{itemize}
+        \item $D \leftarrow RelativisticDopplerFactor(viewDir, velocity)$
+        \item $headlightFactor \leftarrow clamp(D^2, 0.1, 10.0)$
+        \item $finalRadiance \leftarrow envRadiance \cdot headlightFactor$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Relativistic Rendering - Indirect Lighting}
+    \textbf{Challenge:} Indirect light bounces multiple times.
+    
+    \textbf{Solution (Unified Doppler):} The frequency shift depends on the initial observation direction relative to velocity.
+    
+    \textbf{Implementation:}
+    \begin{itemize}
+        \item Store the initial ray direction in the ray payload.
+        \item For all subsequent bounces (indirect lighting), use the stored initial direction to calculate the Doppler factor.
+        \item This ensures consistent frequency shifting across the entire light path.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Relativistic Rendering - Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/0.png}
+        \caption{Relativity Effect: Camera moving at 0.0c (stationary)}
+    \end{figure}
+\end{frame}
+\begin{frame}{Relativistic Rendering - Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/1.png}
+        \caption{Relativity Effect: Camera moving at 0.1c}
+    \end{figure}
+\end{frame}
+\begin{frame}{Relativistic Rendering - Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/2.png}
+        \caption{Relativity Effect: Camera moving at 0.2c}
+    \end{figure}
+\end{frame}
+\begin{frame}{Relativistic Rendering - Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/3.png}
+        \caption{Relativity Effect: Camera moving at 0.3c}
+    \end{figure}
+\end{frame}
+\begin{frame}{Relativistic Rendering - Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/4.png}
+        \caption{Relativity Effect: Camera moving at 0.4c}
+    \end{figure}
+\end{frame}
+\begin{frame}{Relativistic Rendering - Show Cases}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{fig/9.png}
+        \caption{Relativity Effect: Camera moving at 0.9c}
+    \end{figure}
+\end{frame}
+
+%------------------------------------------------
 \section{Results}
 \label{sec:results}
-\subsection{Test Scene \& Denoising}
-\begin{frame}{Results - Test Scene \& Denoising}
+
+\subsection{Chromatic Dispersion}
+\begin{frame}{Results - Chromatic Dispersion}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.6\textwidth]{fig/chroma.jpg}
+        \caption{Chromatic Dispersion Effect: Light splitting into different colors when passing through a prism-like object}
+    \end{figure}
+    We have implemented Chromatic Dispersion effect to simulate the phenomenon where light splits into different colors when passing through materials like glass or water.
+\end{frame}
+\begin{frame}{Results - Chromatic Dispersion}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.75\textwidth]{fig/chroma-2.png}
+        \caption{Chromatic Dispersion Effect: Color fringing on the edges of the sphere}
+    \end{figure}
+    \begin{figure}
+        \includegraphics[width=0.2\textwidth]{fig/chroma-1.png}
+        \caption{Chromatic Dispersion Effect: Color fringing on the bottom of water}
+    \end{figure}
+\end{frame}
+
+\subsection{Depth of Field}
+\begin{frame}{Results - Depth of Field}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\textwidth]{fig/depth-of-field.jpg}
+        \caption{Depth of Field Effect: Focus on the center sphere, with foreground and background blurred}
+    \end{figure}
+    We have implemented Depth of Field effect to enhance realism in our renders. The effect is achieved by simulating a camera lens, where objects at different distances from the focal point appear blurred. In
+    this figure, the sharpest distance is the block in the mirror.
+\end{frame}
+
+\subsection{Denoising}
+\begin{frame}{Results - Denoising}
     \begin{figure}
         \centering
         \includegraphics[width=0.8\textwidth]{fig/denoise.png}
@@ -222,86 +435,6 @@
     This scene demonstrates our renderer's capability to utilize skybox images for realistic environmental lighting. Additionally, we have successfully rendered models from various formats such as glTF and FBX, showcasing the versatility of our system.
 \end{frame}
 
-\subsection{Depth of Field}
-\begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.5\textwidth]{fig/depth-of-field.jpg}
-        \caption{Depth of Field Effect: Focus on the center sphere, with foreground and background blurred}
-    \end{figure}
-    We have implemented Depth of Field effect to enhance realism in our renders. The effect is achieved by simulating a camera lens, where objects at different distances from the focal point appear blurred. In
-    this figure, the sharpest distance is the block in the mirror.
-\end{frame}
-
-\subsection{Chromatic Dispersion}
-\begin{frame}{Results - Chromatic Dispersion}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.6\textwidth]{fig/chroma.jpg}
-        \caption{Chromatic Dispersion Effect: Light splitting into different colors when passing through a prism-like object}
-    \end{figure}
-    We have implemented Chromatic Dispersion effect to simulate the phenomenon where light splits into different colors when passing through materials like glass or water.
-\end{frame}
-\begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.75\textwidth]{fig/chroma-2.png}
-        \caption{Chromatic Dispersion Effect: Color fringing on the edges of the sphere}
-    \end{figure}
-    \begin{figure}
-        \includegraphics[width=0.2\textwidth]{fig/chroma-1.png}
-        \caption{Chromatic Dispersion Effect: Color fringing on the bottom of water}
-    \end{figure}
-\end{frame}
-
-\subsection{Rendering with Relativity effect}
-\begin{frame}{Results - Relativity Effect}
-    We have implemented a basic version of relativistic rendering, which simulates the visual effects of objects moving at speeds close to the speed of light. This includes phenomena such as length contraction and Doppler shifting of colors. In this figure, the cubes appear distorted due to their high velocity relative to the observer.
-\end{frame}
-\begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.6\textwidth]{fig/0.png}
-        \caption{Relativity Effect: Camera moving at 0.0c (stationary)}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.6\textwidth]{fig/1.png}
-        \caption{Relativity Effect: Camera moving at 0.1c}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.6\textwidth]{fig/2.png}
-        \caption{Relativity Effect: Camera moving at 0.2c}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.6\textwidth]{fig/3.png}
-        \caption{Relativity Effect: Camera moving at 0.3c}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.6\textwidth]{fig/4.png}
-        \caption{Relativity Effect: Camera moving at 0.4c}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.6\textwidth]{fig/9.png}
-        \caption{Relativity Effect: Camera moving at 0.9c}
-    \end{figure}
-\end{frame}
-
-
 \subsection{Other Show Cases}
 \begin{frame}{Results - Other Show Cases}
     \begin{figure}
@@ -314,18 +447,14 @@
 \begin{frame}{Results - Other Show Cases}
     \begin{figure}
         \centering
-        \includegraphics[width=0.8\textwidth]{fig/demo3.png}
-        \caption{Scene: Cornell Box with Mirror}
+        \includegraphics[width=0.8\textwidth]{fig/demo4.png}
+        \caption{Scene: Sponza}
     \end{figure}
 \end{frame}
 
 \begin{frame}{Results - Other Show Cases}
-    \begin{figure}
-        \centering
-        \includegraphics[width=0.8\textwidth]{fig/demo4.png}
-        \caption{Scene: Sponza}
-    \end{figure}
-    
+    \centering
+    \animategraphics[autoplay,loop,controls,width=0.8\textwidth]{60}{video/}{0}{60}
 \end{frame}
 %------------------------------------------------
 % \section{Future Plan}
@@ -346,6 +475,10 @@
 %     \end{table}
 % \end{frame}
 %------------------------------------------------
+\section*{Acknowledgement}
+\begin{frame}{Acknowledgement}
+    Thanks for Beier Li \& Kairui Li. They offered their simulation results for our rendering tests.
+\end{frame}
 
 \begin{frame}
     \Huge{\centerline{\textbf{Thanks for Listening!}}}
