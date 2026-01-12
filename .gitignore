@@ -8,3 +8,8 @@
 *.sty
 
 slide/video/*.png
+
+.venv/
+__pycache__/
+
+.vscode/
